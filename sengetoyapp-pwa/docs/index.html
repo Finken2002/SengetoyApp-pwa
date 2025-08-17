@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <title>SengetøyApp</title>
+  <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4CAF50">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>SengetøyApp</h1>
+
+  <section>
+    <h2>Nytt rom</h2>
+    <input id="roomName" placeholder="Romnavn">
+    <input id="intervalDays" type="number" placeholder="Intervall (dager)">
+    <input id="note" placeholder="Notat (valgfritt)">
+    <button onclick="addRoom()">Legg til rom</button>
+  </section>
+
+  <section>
+    <h2>Oversikt</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Rom</th>
+          <th>Intervall</th>
+          <th>Sist skiftet</th>
+          <th>Neste</th>
+          <th>Notat</th>
+          <th>Handling</th>
+        </tr>
+      </thead>
+      <tbody id="roomTable"></tbody>
+    </table>
+  </section>
+
+  <script src="app.js"></script>
+  <script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker registrert"))
+    .catch(err => console.error("SW feil:", err));
+}
+</script>
+</body>
+</html>
