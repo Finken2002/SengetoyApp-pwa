@@ -1,0 +1,21 @@
+# OS-filer
+.DS_Store
+Thumbs.db
+
+# Node / npm (hvis du senere bruker npm, f.eks. for testing eller byggverktøy)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# VSCode / IDE-filer
+.vscode/
+.idea/
+
+# Byggfiler (hvis du senere kjører bygg med bundler)
+dist/
+build/
+
+# Backup / temp
+*.tmp
+*.log
+*.bak

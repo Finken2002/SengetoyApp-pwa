@@ -15,3 +15,15 @@ th, td {
 button {
   margin: 2px;
 }
+#roomsTable td input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  border: none;       /* Fjern kantlinje */
+  outline: none;      /* Fjern blå markering når man klikker */
+  background: transparent; /* Samme bakgrunn som cellen */
+  padding: 0;         /* Ingen luft rundt */
+  margin: 0;
+  font: inherit;         /* Arver font fra tabellen */
+  color: inherit;        /* Arver tekstfarge */
+  text-align: inherit;   /* Samme justering som cellen */
+}

@@ -1,80 +1,137 @@
-let rooms = JSON.parse(localStorage.getItem("rooms") || "[]");
+let rooms = JSON.parse(localStorage.getItem("rooms")) || [];
 
-function save() {
+function saveRooms() {
   localStorage.setItem("rooms", JSON.stringify(rooms));
-  renderTable();
 }
 
-function addRoom() {
-  const name = document.getElementById("roomName").value;
-  const interval = parseInt(document.getElementById("intervalDays").value);
-  const note = document.getElementById("note").value;
+function renderRooms() {
+  const tbody = document.querySelector("#roomsTable tbody");
+  tbody.innerHTML = "";
 
-  if (!name || !interval) return alert("Fyll inn romnavn og intervall!");
+  rooms.forEach((room, index) => {
+    const tr = document.createElement("tr");
+
+    // Romnummer
+    tr.innerHTML += `<td>${room.number}</td>`;
+
+    // Navn
+    tr.innerHTML += `<td>${room.name || ""}</td>`;
+
+    // Intervall
+    tr.innerHTML += `<td>${room.interval ?? 14}</td>`;
+
+    // Sist skiftet
+    tr.innerHTML += `<td>${room.lastChanged || "-"}</td>`;
+
+    // Neste
+    let next = "-";
+    if (room.lastChanged) {
+      const nextDate = new Date(room.lastChanged);
+      nextDate.setDate(nextDate.getDate() + parseInt(room.interval ?? 14));
+      next = nextDate.toISOString().split("T")[0];
+    }
+    tr.innerHTML += `<td>${next}</td>`;
+
+    // Notat (redigerbar)
+    tr.innerHTML += `
+      <td>
+        <input 
+          type="text" 
+          value="${room.note || ""}" 
+          onchange="updateNote(${index}, this.value)" 
+          placeholder="Skriv notat..."
+        />
+      </td>`;
+
+    // Handlinger
+    tr.innerHTML += `
+      <td>
+        <button onclick="markChanged(${index}, 0)">Skiftet i dag</button>
+        <button onclick="markChanged(${index}, -1)">Skiftet i går</button>
+        <button onclick="markEarlier(${index})">Skiftet tidligere</button>
+        <button onclick="deleteRoom(${index})">Slett</button>
+      </td>`;
+
+    tbody.appendChild(tr);
+  });
+}
+
+// Legg til nytt rom fra inputfeltene
+function addRoom() {
+  const numberInput = document.getElementById("roomNumber");
+  const nameInput   = document.getElementById("roomName");
+  const noteInput   = document.getElementById("roomNote");
+  const intervalInp = document.getElementById("intervalDays");
+
+  const number  = numberInput.value.trim();
+  const name    = nameInput.value.trim();
+  const note    = noteInput.value.trim();
+  const interval = parseInt(intervalInp.value, 10);
+  const days    = Number.isFinite(interval) && interval > 0 ? interval : 14;
+
+  if (!number) {
+    alert("Romnummer må fylles ut.");
+    return;
+  }
+
+  const today = new Date().toISOString().split("T")[0];
 
   rooms.push({
-    room: name,
-    days: interval,
-    lastChanged: today(),
-    note: note
+    number,
+    name,
+    note,
+    interval: days,
+    lastChanged: today
   });
-  save();
+  saveRooms();
+  renderRooms();
+
+  // Tøm felter
+  numberInput.value = "";
+  nameInput.value   = "";
+  noteInput.value   = "";
+  intervalInp.value = "";
 }
 
-function renderTable() {
-  const tbody = document.getElementById("roomTable");
-  tbody.innerHTML = "";
-  rooms.forEach((r, i) => {
-    const next = addDays(r.lastChanged, r.days);
-    tbody.innerHTML += `
-      <tr>
-        <td>${r.room}</td>
-        <td>${r.days}</td>
-        <td>${r.lastChanged}</td>
-        <td>${next}</td>
-        <td>${r.note || ""}</td>
-        <td>
-          <button onclick="markChanged(${i},0)">Skiftet i dag</button>
-          <button onclick="markChanged(${i},1)">Skiftet i går</button>
-          <button onclick="markEarlier(${i})">Skiftet tidligere…</button>
-          <button onclick="deleteRoom(${i})">Slett</button>
-        </td>
-      </tr>
-    `;
-  });
+
+// Marker at det ble skiftet (offset = 0 for i dag, -1 for i går)
+function markChanged(index, offset) {
+  const today = new Date();
+  today.setDate(today.getDate() + offset);
+  rooms[index].lastChanged = today.toISOString().split("T")[0];
+  saveRooms();
+  renderRooms();
 }
 
-function markChanged(i, offset) {
-  let d = new Date();
-  d.setDate(d.getDate() - offset);
-  rooms[i].lastChanged = formatDate(d);
-  save();
-}
+// Marker tidligere dato
+function markEarlier(index) {
+  const dateStr = prompt("Hvilken dato ble det skiftet? (yyyy-mm-dd)");
+  if (!dateStr) return;
 
-function markEarlier(i) {
-  const date = prompt("Velg dato (YYYY-MM-DD):");
-  if (!date) return;
-  rooms[i].lastChanged = date;
-  save();
-}
-
-function deleteRoom(i) {
-  if (confirm("Vil du slette rommet?")) {
-    rooms.splice(i,1);
-    save();
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed)) {
+    rooms[index].lastChanged = parsed.toISOString().split("T")[0];
+    saveRooms();
+    renderRooms();
+  } else {
+    alert("Ugyldig datoformat. Bruk yyyy-mm-dd.");
   }
 }
 
-function today() {
-  return formatDate(new Date());
-}
-function addDays(dateStr, days) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  return formatDate(d);
-}
-function formatDate(d) {
-  return d.toISOString().split("T")[0];
+// Slett rom
+function deleteRoom(index) {
+  if (confirm("Er du sikker på at du vil slette dette rommet?")) {
+    rooms.splice(index, 1);
+    saveRooms();
+    renderRooms();
+  }
 }
 
-renderTable();
+// Oppdater notat
+function updateNote(index, value) {
+  rooms[index].note = value;
+  saveRooms();
+}
+
+// Start når siden lastes
+window.onload = renderRooms;
